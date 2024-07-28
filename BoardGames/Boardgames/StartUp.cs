@@ -1,14 +1,13 @@
-﻿using Invoices.Data;
-using Microsoft.EntityFrameworkCore;
-using System.Globalization;
-
-namespace Invoices
+﻿namespace Boardgames
 {
+    using Microsoft.EntityFrameworkCore;
+    using Boardgames.Data;
+
     public class StartUp
     {
         public static void Main()
         {
-            var context = new InvoicesContext();
+            var context = new BoardgamesContext();
 
             ResetDatabase(context, shouldDropDatabase: true);
 
@@ -16,7 +15,7 @@ namespace Invoices
 
             ImportEntities(context, projectDir + @"Datasets/", projectDir + @"ImportResults/");
 
-            //ExportEntities(context, projectDir + @"ExportResults/");
+            ExportEntities(context, projectDir + @"ExportResults/");
 
             using (var transaction = context.Database.BeginTransaction())
             {
@@ -24,38 +23,35 @@ namespace Invoices
             }
         }
 
-        private static void ImportEntities(InvoicesContext context, string baseDir, string exportDir)
+        private static void ImportEntities(BoardgamesContext context, string baseDir, string exportDir)
         {
-            var clients =
-                DataProcessor.Deserializer.ImportClients(context,
-                    File.ReadAllText(baseDir + "clients.xml"));
-            PrintAndExportEntityToFile(clients, exportDir + "Actual Result - ImportClients.txt");
+            var creators =
+                DataProcessor.Deserializer.ImportCreators(context,
+                    File.ReadAllText(baseDir + "creators.xml"));
 
-            var invoices =
-                DataProcessor.Deserializer.ImportInvoices(context,
-                    File.ReadAllText(baseDir + "invoices.json"));
-            PrintAndExportEntityToFile(invoices, exportDir + "Actual Result - ImportInvoices.txt");
+            PrintAndExportEntityToFile(creators, exportDir + "Actual Result - ImportCreators.txt");
 
-            var products =
-             DataProcessor.Deserializer.ImportProducts(context,
-                 File.ReadAllText(baseDir + "products.json"));
-            PrintAndExportEntityToFile(products, exportDir + "Actual Result - ImportProducts.txt");
+            var sellers =
+             DataProcessor.Deserializer.ImportSellers(context,
+                 File.ReadAllText(baseDir + "sellers.json"));
+
+            PrintAndExportEntityToFile(sellers, exportDir + "Actual Result - ImportSellers.txt");
         }
 
-        private static void ExportEntities(InvoicesContext context, string exportDir)
+        private static void ExportEntities(BoardgamesContext context, string exportDir)
         {
-            DateTime date = DateTime.ParseExact("01/12/2022", "dd/MM/yyyy", CultureInfo.InvariantCulture);
-            var exportClientsWithTheirInvoices = DataProcessor.Serializer.ExportClientsWithTheirInvoices(context, date);
-            Console.WriteLine(exportClientsWithTheirInvoices);
-            File.WriteAllText(exportDir + "Actual Result - ExportClientsWithTheirInvoices.xml", exportClientsWithTheirInvoices);
+            var exportCreatorsWithTheirBoardgames = DataProcessor.Serializer.ExportCreatorsWithTheirBoardgames(context);
+            Console.WriteLine(exportCreatorsWithTheirBoardgames);
+            File.WriteAllText(exportDir + "Actual Result - ExportCreatorsWithTheirBoardgames.xml", exportCreatorsWithTheirBoardgames);
 
-            var nameLength = 11;
-            var exportProductsWithMostClients = DataProcessor.Serializer.ExportProductsWithMostClients(context, nameLength);
-            Console.WriteLine(exportProductsWithMostClients);
-            File.WriteAllText(exportDir + "Actual Result - ExportProductsWithMostClients.json", exportProductsWithMostClients);
+            var year = 2021;
+            double rating = 9.50;
+            var exportSellersWithMostBoardgames = DataProcessor.Serializer.ExportSellersWithMostBoardgames(context, year, rating);
+            Console.WriteLine(exportSellersWithMostBoardgames);
+            File.WriteAllText(exportDir + "Actual Result - ExportSellersWithMostBoardgames.json", exportSellersWithMostBoardgames);
         }
 
-        private static void ResetDatabase(InvoicesContext context, bool shouldDropDatabase = false)
+        private static void ResetDatabase(BoardgamesContext context, bool shouldDropDatabase = false)
         {
             if (shouldDropDatabase)
             {
